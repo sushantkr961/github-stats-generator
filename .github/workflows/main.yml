@@ -21,25 +21,16 @@ jobs:
     # Sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out repository under $GITHUB_WORKSPACE, so the job can access it
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
     # Run using Python 3.8 for consistency and aiohttp
     - name: Set up Python 3.8
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: '3.8'
-        architecture: 'x64'
-
-    # Cache dependencies. From:
-    # https://github.com/actions/cache/blob/master/examples.md#python---pip
-    - uses: actions/cache@v2
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+        cache: 'pip'
 
     # Install dependencies with `pip`
     - name: Install requirements
@@ -48,7 +39,7 @@ jobs:
         python3 -m pip install -r requirements.txt
 
     # Generate all statistics images
-    - name: Generate images
+    - name: Generate stats images
       run: |
         python3 --version
         python3 generate_images.py
@@ -58,6 +49,13 @@ jobs:
         EXCLUDED: ${{ secrets.EXCLUDED }}
         EXCLUDED_LANGS: ${{ secrets.EXCLUDED_LANGS }}
         EXCLUDE_FORKED_REPOS: true
+    - name: Generate snk images
+      uses: Platane/snk@v2
+      with:
+        github_user_name: ${{ github.repository_owner }}
+        outputs: |
+          generated/github-snake.svg
+          generated/github-snake-dark.svg?palette=github-dark
 
     # Import GPG key
     - name: Import GPG key
